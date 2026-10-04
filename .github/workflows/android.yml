@@ -22,10 +22,16 @@ jobs:
         cache: gradle
 
     # Wajib: app/build.gradle mem-pin ndkVersion 22.0.7026061 (ndk-build).
-    # Runner GitHub tidak menyertakan NDK r22 secara default.
+    # NDK r22 sudah tidak tersedia via sdkmanager -> download dari arsip Google.
     - name: Install Android NDK r22
       run: |
-        yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "ndk;22.0.7026061"
+        mkdir -p "$ANDROID_HOME/ndk"
+        cd "$ANDROID_HOME/ndk"
+        curl -o ndk-r22.zip https://dl.google.com/android/repository/android-ndk-r22-linux-x86_64.zip
+        unzip -q ndk-r22.zip
+        mv android-ndk-r22 22.0.7026061
+        rm ndk-r22.zip
+        ls "$ANDROID_HOME/ndk"
 
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew

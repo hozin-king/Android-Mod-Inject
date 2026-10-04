@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <fstream>
 #include <iostream>
+#include <cstdio>
 #include <dlfcn.h>
 #include "Includes/Logger.h"
 #include "Includes/obfuscate.h"
@@ -30,7 +31,13 @@ enum f {
     f8 = 11,
     f9 = 12,
     f10 = 13,
+    f11 = 504, // Dump Game Files (tombol 500 di menu)
 };
+
+// Nama lib target dari halaman Settings ("Target lib", featNum -11).
+// Diteruskan ke server (LibServer) via ConfigMode saat konek.
+// Kosong = pakai default "libil2cpp.so".
+static char g_libName[128] = {0};
 
 
 //JNI calls
@@ -94,7 +101,12 @@ extern "C" {
                 "This is WebView, with REAL HTML support!"
                 "<div style=\"background-color: darkblue; text-align: center;\">Support CSS</div>"
                 "<marquee style=\"color: green; font-weight:bold;\" direction=\"left\" scrollamount=\"5\" behavior=\"scroll\">This is <u>scrollable</u> text</marquee>"
-                "</body></html>")
+                "</body></html>"),
+
+            // Kategori: tools untuk auto-dump & auto-update (Subway Surfers)
+            OBFUSCATE("Category_AUTO DUMP & UPDATE"),
+            //Not counted
+            OBFUSCATE("500_Button_Dump Game Files (lib+APK)"),
         };
 
         //Now you dont have to manually update the number everytime;
@@ -162,6 +174,27 @@ extern "C" {
             break;
             case 9:
             break;
+            case 500:
+            // Tombol "Dump Game Files": salin libil2cpp.so + base.apk ke HP
+            // untuk dianalisis di PC (Il2CppDumper -> dump.cs -> signature)
+            Send(f::f11, true);
+            break;
+            case -10:
+            // "Target package" dari halaman Settings. Package dipakai langsung
+            // oleh Java (InjectRoot/InjectVirtual baca dari Preferences),
+            // jadi client native tidak perlu menyimpan.
+            break;
+            case -11:
+            // "Target lib" dari halaman Settings. Disimpan di sini lalu
+            // diteruskan ke server (LibServer) via ConfigMode saat Init().
+            if (str != NULL) {
+                const char *s = env->GetStringUTFChars(str, 0);
+                if (s != NULL) {
+                    snprintf(g_libName, sizeof(g_libName), "%s", s);
+                    env->ReleaseStringUTFChars(str, s);
+                }
+            }
+            break;
         }
     }
 }
@@ -191,7 +224,8 @@ extern "C" {
 extern "C"
 JNIEXPORT void JNICALL
 Java_uk_lgl_modmenu_FloatingModMenuService_Init(JNIEnv *env, jobject thiz) {
-    startClient();
+    // Teruskan nama lib dari Settings ke server (default bila kosong)
+    startClient(g_libName[0] != '\0' ? g_libName : "libil2cpp.so");
 }
 
 extern "C"

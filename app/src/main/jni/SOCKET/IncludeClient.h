@@ -1,6 +1,9 @@
+#include <cstdio>
+
 SocketClient client;
 void startDaemon();
-int startClient();
+int startClient(const char *libName);
+bool sendLibConfig(const char *libName);
 bool isConnected();
 void stopClient();
 bool initServer();
@@ -10,6 +13,7 @@ enum Mode {
     InitMode = 1,
     HackMode = 2,
     StopMode = 3,
+    ConfigMode = 4, // kirim konfigurasi (nama lib target) ke server
     EspMode = 99,
 };
 
@@ -19,6 +23,12 @@ struct Request {
     int Value;
     int screenWidth;
     int screenHeight;
+};
+
+// Pesan konfigurasi client -> server. Dikirim sekali setelah InitMode.
+struct ConfigRequest {
+    int Mode;          // = Mode::ConfigMode
+    char libName[128]; // nama lib target, mis. "libil2cpp.so"
 };
 
 
@@ -57,12 +67,32 @@ struct Response {
 
 
 
-int startClient(){
+int startClient(const char *libName){
     client = SocketClient();
     if(!client.Create()){ return -1; }
     if(!client.Connect()){ return -1; }
     if(!initServer()){ return -1; }
+    // Beritahu server nama lib target (dari Settings, atau default)
+    sendLibConfig(libName);
     return 0;
+}
+
+// Kirim nama lib target ke server. Best-effort: kegagalan tidak menggagalkan
+// konek karena server punya default ("libil2cpp.so").
+bool sendLibConfig(const char *libName) {
+    ConfigRequest cfg{};
+    cfg.Mode = Mode::ConfigMode;
+    snprintf(cfg.libName, sizeof(cfg.libName), "%s",
+             (libName && libName[0]) ? libName : "libil2cpp.so");
+    int code = client.sendX((void*) &cfg, sizeof(cfg));
+    if (code > 0) {
+        Response response{};
+        size_t length = client.receive((void*) &response);
+        if (length > 0) {
+            return response.Success;
+        }
+    }
+    return false;
 }
 
 bool isConnected(){

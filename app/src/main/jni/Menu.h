@@ -79,6 +79,12 @@ Java_uk_lgl_modmenu_FloatingModMenuService_settingsList(JNIEnv *env, jobject act
             OBFUSCATE("Category_Settings"),
             OBFUSCATE("-1_Toggle_Save feature preferences"), //-1 is checked on Preferences.java
             OBFUSCATE("-3_Toggle_Auto size vertically"),
+            OBFUSCATE("Category_Target Game"),
+            OBFUSCATE("RichTextView_<small>Game yang akan di-inject & lib yang akan di-patch. "
+                            "Kosongkan untuk pakai default (Subway Surfers / libil2cpp.so). "
+                            "<br/>Berlaku setelah menu dibuka ulang / inject ulang.</small>"),
+            OBFUSCATE("-10_InputText_Target package"),
+            OBFUSCATE("-11_InputText_Target lib"),
             OBFUSCATE("Category_Logcat"),
             OBFUSCATE("RichTextView_Save logcat if a bug occured and sent it to the modder. Clear logcat and reproduce bug again if the log file is too large"),
             OBFUSCATE("RichTextView_<small>Saving logcat does not need file permission. Logcat location:"

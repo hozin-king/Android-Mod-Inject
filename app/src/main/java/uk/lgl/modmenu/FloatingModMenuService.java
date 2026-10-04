@@ -77,7 +77,7 @@ public class FloatingModMenuService extends Service {
 
     //***************** TARGET *********//
         String LibName = "libLibServer.so";
-    String targetPackage = "fps.zombie.shooting.fun.to.dead";
+    String targetPackage = "com.kiloo.subwaysurf";
     
     
     //region Variable
@@ -1051,7 +1051,7 @@ public class FloatingModMenuService extends Service {
                 button2.setLayoutParams(layoutParams);
                 button2.setTextColor(TEXT_COLOR_2);
                 button2.setAllCaps(false); //Disable caps to support html
-                button2.setText(Html.fromHtml("<b>Inject On Root [Magisk ++]</b>"));
+                button2.setText(Html.fromHtml("<b>Inject On Root [Magisk / KernelSU ++]</b>"));
                 button2.setBackgroundColor(BTN_COLOR);
                 
                 button.setOnClickListener(new View.OnClickListener() {
@@ -1151,7 +1151,9 @@ public class FloatingModMenuService extends Service {
         
         private boolean InjectRoot(String Lib) {
                 try {
-                        String target = targetPackage;
+                        // Target package dari halaman Settings (-10); default bila kosong
+                        String target = Preferences.with(this).readString(-10);
+                        if (target == null || target.trim().isEmpty()) target = targetPackage;
                         String injector = this.getApplicationInfo().nativeLibraryDir + File.separator + "libGlobalInject.so";
                         String payload_source = this.getApplicationInfo().nativeLibraryDir + File.separator + Lib;
                         String payload_dest = "/data/local/tmp/"+Lib;
@@ -1172,6 +1174,10 @@ public class FloatingModMenuService extends Service {
                         int pid = getProcessID(target);
                         String command = String.format(Locale.ENGLISH,"%s %d %s", injector, pid, payload_dest);
                         Shell.su(command).exec();
+                        // Payload sudah di-dlopen ke proses game; hapus file-nya dari
+                        // /data/local/tmp agar tidak tertinggal (lebih stealth).
+                        // File akan disalin ulang otomatis saat inject berikutnya.
+                        Shell.su("rm -f " + payload_dest).exec();
                         Init();
                         return true;
                     } catch (Exception e) {
@@ -1182,7 +1188,9 @@ public class FloatingModMenuService extends Service {
             }
         private boolean InjectVirtual(String Lib) {
                 try {
-                        String target = targetPackage;
+                        // Target package dari halaman Settings (-10); default bila kosong
+                        String target = Preferences.with(this).readString(-10);
+                        if (target == null || target.trim().isEmpty()) target = targetPackage;
                         String injector = this.getApplicationInfo().nativeLibraryDir + File.separator + "libVirtualInject.so";
                         String payload_source = this.getApplicationInfo().nativeLibraryDir + File.separator + Lib;
                         String payload_dest = "/data/local/tmp/"+Lib;
@@ -1203,6 +1211,10 @@ public class FloatingModMenuService extends Service {
                         int pid = getProcessID(target);
                         String command = String.format(Locale.ENGLISH,"%s %d %s", injector, pid, payload_dest);
                         Shell.su(command).exec();
+                        // Payload sudah di-dlopen ke proses game; hapus file-nya dari
+                        // /data/local/tmp agar tidak tertinggal (lebih stealth).
+                        // File akan disalin ulang otomatis saat inject berikutnya.
+                        Shell.su("rm -f " + payload_dest).exec();
                         Init();
                         return true;
                     } catch (Exception e) {

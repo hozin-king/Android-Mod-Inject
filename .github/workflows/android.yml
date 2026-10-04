@@ -5,22 +5,37 @@ on:
     branches: [ "master" ]
   pull_request:
     branches: [ "master" ]
+  workflow_dispatch: # tombol "Run workflow" manual di tab Actions
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
+
     - name: set up JDK 11
-      uses: actions/setup-java@v3
+      uses: actions/setup-java@v4
       with:
         java-version: '11'
         distribution: 'temurin'
         cache: gradle
 
+    # Wajib: app/build.gradle mem-pin ndkVersion 22.0.7026061 (ndk-build).
+    # Runner GitHub tidak menyertakan NDK r22 secara default.
+    - name: Install Android NDK r22
+      run: |
+        yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "ndk;22.0.7026061"
+
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
-    - name: Build with Gradle
-      run: ./gradlew build
+
+    - name: Build debug APK
+      run: ./gradlew assembleDebug --stacktrace
+
+    - name: Upload APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: mod-menu-apk
+        path: app/build/outputs/apk/debug/*.apk
+        if-no-files-found: error

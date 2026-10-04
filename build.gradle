@@ -17,6 +17,8 @@ buildscript {
 allprojects {
     repositories {
         google()
+        mavenCentral()
+        maven { url 'https://jitpack.io' } // pengganti jcenter (sudah mati) utk libsuperuser Chainfire
         jcenter()
         
     }
